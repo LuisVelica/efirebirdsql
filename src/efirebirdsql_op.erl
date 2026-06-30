@@ -174,12 +174,30 @@ op_attach(Conn, Database) ->
             91, length(TimeZone), TimeZone  %% isc_dpb_session_time_zone = 91
         ])
     end,
+    %% isc_dpb_process_name (74) / isc_dpb_process_id (71): let the client identify itself
+    %% in MON$ATTACHMENTS (MON$REMOTE_PROCESS / MON$REMOTE_PID). Only sent when configured.
+    Dpb3 = case Conn#conn.process_name of
+        Name when is_list(Name), Name =/= [] ->
+            lists:flatten([Dpb2,
+                74, length(Name), Name  %% isc_dpb_process_name = 74
+            ]);
+        _ ->
+            Dpb2
+    end,
+    Dpb4 = case Conn#conn.process_id of
+        Pid when is_integer(Pid) ->
+            lists:flatten([Dpb3,
+                71, 4, efirebirdsql_conv:byte4(Pid, little)  %% isc_dpb_process_id = 71
+            ]);
+        _ ->
+            Dpb3
+    end,
 
     list_to_binary(lists:flatten([
         efirebirdsql_conv:byte4(op_val(op_attach)),
         efirebirdsql_conv:byte4(0),
         efirebirdsql_conv:list_to_xdr_string(Database),
-        efirebirdsql_conv:list_to_xdr_bytes(Dpb2)])).
+        efirebirdsql_conv:list_to_xdr_bytes(Dpb4)])).
 
 op_detach(DbHandle) ->
     ?DEBUG_FORMAT("op_detatch -> ", []),
