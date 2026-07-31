@@ -55,3 +55,4 @@ Available connect option parameters
    auto_commit, Autocommit flag, true
    auth_plugin, Authentication plugin name, \"Srp\", Firebird 3.0+
    wire_crypt, Wire encryption flag, true, Firebird 3.0+
+
